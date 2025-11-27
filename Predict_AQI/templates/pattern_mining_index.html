@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pattern Mining Weather AQI - Raw Data Viewer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔍 Pattern Mining Weather AQI</h1>
+            <p class="subtitle">Xem kết quả Pattern Mining và Output trước khi gửi vào LLM</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Statistics Section -->
+            <section class="card">
+                <h2>📊 Thống Kê Dữ Liệu</h2>
+                <button id="refreshStatsBtn" class="btn btn-secondary">Làm Mới Thống Kê</button>
+                <div id="statsDisplay" class="stats-display"></div>
+            </section>
+
+            <!-- Initialization Section -->
+            <section class="card">
+                <h2>📊 Bước 1: Khởi tạo Quy Luật FP-Growth</h2>
+                <p>Áp dụng FP-Growth trên dữ liệu weather_aqi_dataset.csv để khai thác các quy luật kết hợp</p>
+                <button id="initBtn" class="btn btn-primary">Khởi tạo Quy Luật</button>
+                <div id="initStatus" class="status"></div>
+            </section>
+
+            <!-- Fetch Data from API Section -->
+            <section class="card">
+                <h2>🌐 Lấy Dữ Liệu Từ API (Tùy chọn)</h2>
+                <p>Lấy dữ liệu thời tiết và chất lượng không khí real-time từ OpenWeatherMap API</p>
+                
+                <div class="api-fetch-section">
+                    <div class="form-group" style="max-width: 300px; margin-bottom: 15px;">
+                        <label>Thành phố:</label>
+                        <input type="text" id="apiCity" value="Hanoi" placeholder="Hanoi">
+                    </div>
+                    
+                    <div class="form-group" style="max-width: 300px; margin-bottom: 15px;">
+                        <label>Quốc gia:</label>
+                        <input type="text" id="apiCountry" value="VN" placeholder="VN">
+                    </div>
+                    
+                    <button id="fetchDataBtn" class="btn btn-secondary">Lấy Dữ Liệu Từ API</button>
+                    <div id="fetchStatus" class="status"></div>
+                    
+                    <div id="fetchedDataDisplay" class="fetched-data-display" style="display: none; margin-top: 20px;">
+                        <h3 style="color: #667eea; margin-bottom: 10px;">📊 Dữ Liệu Đã Lấy</h3>
+                        <div id="fetchedDataContent" class="data-display"></div>
+                        <button id="useFetchedDataBtn" class="btn btn-success" style="margin-top: 15px;">Sử Dụng Dữ Liệu Này</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Input Data Section -->
+            <section class="card">
+                <h2>📥 Bước 2: Nhập Dữ Liệu Hiện Tại</h2>
+                <p>Nhập dữ liệu thời tiết và chất lượng không khí để phân tích (hoặc sử dụng dữ liệu từ API ở trên)</p>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Giờ trong ngày (0-23):</label>
+                        <input type="number" id="hour" min="0" max="23">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Tốc độ gió (m/s):</label>
+                        <input type="number" id="windSpeed" step="0.1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Độ ẩm (%):</label>
+                        <input type="number" id="humidity" step="0.1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>PM2.5 (µg/m³):</label>
+                        <input type="number" id="pm25" step="0.1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>PM10 (µg/m³):</label>
+                        <input type="number" id="pm10" step="0.1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Lượng mưa (mm):</label>
+                        <input type="number" id="rain" step="0.1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Nhiệt độ (°C):</label>
+                        <input type="number" id="temp" step="0.1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Áp suất (hPa):</label>
+                        <input type="number" id="pressure" step="0.1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Tỉnh/Thành phố:</label>
+                        <input type="text" id="province">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Ngưỡng Lift:</label>
+                        <input type="number" id="thresholdLift" value="1.5" step="0.1" min="1.0">
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #667eea;">
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox" id="useApiData" style="margin-right: 10px; width: 20px; height: 20px; cursor: pointer;">
+                        <span style="font-weight: 600; color: #667eea;">Tự động lấy dữ liệu từ API khi phân tích</span>
+                    </label>
+                    <p style="margin-top: 8px; margin-left: 30px; color: #666; font-size: 0.9em;">
+                        Nếu bật, hệ thống sẽ tự động lấy dữ liệu từ API dựa trên thành phố bạn nhập ở trên
+                    </p>
+                </div>
+                
+                <button id="analyzeBtn" class="btn btn-success" style="margin-top: 20px;">Phân Tích & Xem Output</button>
+            </section>
+
+            <!-- Results Section -->
+            <section class="card" id="resultsSection" style="display: none;">
+                <h2>📈 Kết Quả Phân Tích - Output Trước Khi Gửi Vào LLM</h2>
+                
+                <div class="results-grid">
+                    <!-- Weather Data -->
+                    <div class="result-box">
+                        <h3>🌤️ Dữ Liệu Thời Tiết</h3>
+                        <div id="weatherDataDisplay" class="data-display"></div>
+                    </div>
+                    
+                    <!-- Air Quality Data -->
+                    <div class="result-box">
+                        <h3>💨 Dữ Liệu Chất Lượng Không Khí</h3>
+                        <div id="airQualityDisplay" class="data-display"></div>
+                    </div>
+                    
+                    <!-- Risk Assessment -->
+                    <div class="result-box">
+                        <h3>⚠️ Đánh Giá Rủi Ro</h3>
+                        <div id="riskAssessmentDisplay" class="data-display"></div>
+                    </div>
+                </div>
+                
+                <!-- Matched Rules -->
+                <div class="result-box" style="margin-top: 20px;">
+                    <h3>🔍 Quy Luật Khớp (Matched Rules)</h3>
+                    <div id="matchedRulesDisplay" class="rules-display"></div>
+                </div>
+                
+                <!-- Raw JSON Output -->
+                <div class="result-box" style="margin-top: 20px;">
+                    <h3>📄 Raw JSON Output (Trước Khi Gửi Vào LLM)</h3>
+                    <pre id="rawJsonOutput" class="json-output"></pre>
+                </div>
+            </section>
+
+            <!-- Frequent Itemsets Section -->
+            <section class="card" id="itemsetsSection" style="display: none;">
+                <h2>📋 Frequent Itemsets</h2>
+                <button id="showItemsetsBtn" class="btn btn-secondary">Xem Frequent Itemsets</button>
+                <div id="itemsetsList" class="rules-list"></div>
+            </section>
+
+            <!-- Rules List Section -->
+            <section class="card" id="rulesSection" style="display: none;">
+                <h2>📋 Danh Sách Association Rules</h2>
+                <button id="showRulesBtn" class="btn btn-secondary">Xem Tất Cả Quy Luật</button>
+                <div id="rulesList" class="rules-list"></div>
+            </section>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
+
