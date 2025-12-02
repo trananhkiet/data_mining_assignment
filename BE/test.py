@@ -12,7 +12,7 @@ def print_header(title):
     print("=" * 70)
 
 
-def test_forecast_prediction(province="Ha Noi"):
+def test_forecast_prediction(province="Ho Chi Minh"):
     """Test forecast prediction for a specific province"""
     print_header(f"TEST 3: Forecast Prediction for {province}")
     
@@ -97,7 +97,7 @@ def main():
     
     # Test 3: Single forecast
     try:
-        results.append(("Forecast (Ha Noi)", test_forecast_prediction("Ha Noi")))
+        results.append(("Forecast (Ha Noi)", test_forecast_prediction("Ho Chi Minh")))
     except Exception as e:
         print(f"\n❌ Forecast Failed: {e}")
         results.append(("Forecast (Ha Noi)", False))
