@@ -318,7 +318,7 @@ def categorize_aqi_pm25(pm25: float) -> str:
 def normalize_province_name(province: str) -> str:
     """Normalize province name"""
     province_mapping = {
-        "Hà Nội": "Ha Noi",
+        "Ha Noi": "Ha Noi",
         "Hải Phòng": "Hai Phong",
         "Đà Nẵng": "Da Nang",
         "Bình Định": "Binh Dinh",
@@ -339,6 +339,30 @@ def normalize_province_name(province: str) -> str:
     }
     return province_mapping.get(province, province)
 
+def normalize_province_name2(province: str) -> str:
+    """Normalize province name from space to underscore"""
+    province_mapping = {
+        "Ha Noi": "Ha_Noi",
+        "Hai Phong": "Hai_Phong",
+        "Da Nang": "Da_Nang",
+        "Binh Dinh": "Binh_Dinh",
+        "Can Tho": "Can_Tho",
+        "Ho Chi Minh": "Ho_Chi_Minh",
+        "An Giang": "An_Giang",
+        "Ben Tre": "Ben_Tre",
+        "Bac Lieu": "Bac_Lieu",
+        "Bac Giang": "Bac_Giang",
+        "Bac Kan": "Bac_Kan",
+        "Ba Ria - Vung Tau": "Ba_Ria_-_Vung_Tau",
+        "Lao Cai": "Lao_Cai",
+        "Nghe An": "Nghe_An",
+        "Ninh Thuan": "Ninh_Thuan",
+        "Gia Lai": "Gia_Lai",
+        "Ca Mau": "Ca_Mau"
+    }
+    return province_mapping.get(province, province)
+
+
 # ============================================================================
 # FEATURE ENGINEERING (Following notebook preprocessing exactly)
 # ============================================================================
@@ -353,7 +377,7 @@ def create_feature_vector(province: str, target_time: datetime,
     province_normalized = normalize_province_name(province)
     
     try:
-        province_encoded = label_encoder.transform([province_normalized])[0]
+        province_encoded = label_encoder.transform([normalize_province_name2(province_normalized)])[0]
     except:
         logger.warning(f"Province {province_normalized} not in encoder, using default")
         province_encoded = 0
